@@ -1,0 +1,164 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <iomanip>
+
+using namespace std;
+
+// Student class - Week 1 implementation
+class Student {
+private:
+    int indexNumber;
+    string fullName;
+    string email;
+    
+public:
+    Student() : indexNumber(0) {}
+    Student(int index, string name, string mail) : 
+        indexNumber(index), fullName(name), email(mail) {}
+    
+    // Getters
+    int getIndexNumber() const { return indexNumber; }
+    string getFullName() const { return fullName; }
+    string getEmail() const { return email; }
+    
+    // Display student info
+    void display() const {
+        cout << left << setw(10) << indexNumber 
+             << setw(25) << fullName 
+             << setw(30) << email << endl;
+    }
+};
+
+// Global vector for students
+vector<Student> students;
+
+// Function declarations
+void registerStudent();
+void viewAllStudents();
+void searchStudent();
+void saveStudentsToFile();
+void loadStudentsFromFile();
+
+int main() {
+    loadStudentsFromFile();  // Load existing student data
+    
+    int choice;
+    do {
+        cout << "\n=== STUDENT MANAGEMENT ===" << endl;
+        cout << "1. Register Student" << endl;
+        cout << "2. View All Students" << endl;
+        cout << "3. Search Student by Index" << endl;
+        cout << "0. Exit" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+        
+        switch(choice) {
+            case 1:
+                registerStudent();
+                break;
+            case 2:
+                viewAllStudents();
+                break;
+            case 3:
+                searchStudent();
+                break;
+            case 0:
+                saveStudentsToFile();
+                cout << "Goodbye!" << endl;
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+        }
+    } while (choice != 0);
+    
+    return 0;
+}
+
+void registerStudent() {
+    int index;
+    string name, email;
+    
+    cout << "Enter student index number: ";
+    cin >> index;
+    
+    cout << "Enter student name: ";
+    cin.ignore();
+    getline(cin, name);
+    cout << "Enter student email: ";
+    getline(cin, email);
+    
+    students.push_back(Student(index, name, email));
+    cout << "Student registered successfully!" << endl;
+}
+
+void viewAllStudents() {
+    if (students.empty()) {
+        cout << "No students registered yet." << endl;
+        return;
+    }
+    
+    cout << "\n--- ALL STUDENTS ---" << endl;
+    cout << left << setw(10) << "Index" << setw(25) << "Name" << setw(30) << "Email" << endl;
+    cout << string(65, '-') << endl;
+    for (const auto& student : students) {
+        student.display();
+    }
+}
+
+void searchStudent() {
+    int index;
+    cout << "Enter student index to search: ";
+    cin >> index;
+    
+    for (const auto& student : students) {
+        if (student.getIndexNumber() == index) {
+            cout << "\n--- STUDENT FOUND ---" << endl;
+            cout << "Index: " << student.getIndexNumber() << endl;
+            cout << "Name: " << student.getFullName() << endl;
+            cout << "Email: " << student.getEmail() << endl;
+            return;
+        }
+    }
+    cout << "Student with index " << index << " not found!" << endl;
+}
+
+void saveStudentsToFile() {
+    ofstream file("students.txt");
+    if (!file.is_open()) {
+        cout << "Error opening students file!" << endl;
+        return;
+    }
+    
+    for (const auto& student : students) {
+        file << student.getIndexNumber() << "|" 
+             << student.getFullName() << "|" 
+             << student.getEmail() << endl;
+    }
+    
+    file.close();
+}
+
+void loadStudentsFromFile() {
+    ifstream file("students.txt");
+    if (!file.is_open()) {
+        return; // File doesn't exist yet, that's fine
+    }
+    
+    string line;
+    while (getline(file, line)) {
+        size_t pos1 = line.find('|');
+        size_t pos2 = line.find('|', pos1 + 1);
+        
+        if (pos1 != string::npos && pos2 != string::npos) {
+            int index = stoi(line.substr(0, pos1));
+            string name = line.substr(pos1 + 1, pos2 - pos1 - 1);
+            string email = line.substr(pos2 + 1);
+            
+            students.push_back(Student(index, name, email));
+        }
+    }
+    
+    file.close();
+}
